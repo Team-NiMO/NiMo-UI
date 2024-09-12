@@ -9,6 +9,18 @@ class Ui(QtWidgets.QMainWindow):
 
         self.showFullScreen()
 
+        # Connect Buttons to Functions
+        self.exitButton.clicked.connect(self.exitEvent)
+
+        # Setup table
+        self.horizontalHeader = self.table.horizontalHeader()
+        self.horizontalHeader.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.horizontalHeader.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        self.horizontalHeader.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+
+    def exitEvent(self):
+        exit()
+
 if __name__ == "__main__":
     rospack = rospkg.RosPack()
     package_path = rospack.get_path('nimo_ui')
