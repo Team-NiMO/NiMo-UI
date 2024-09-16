@@ -33,7 +33,7 @@
      <enum>Qt::Vertical</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="mapImage">
+   <widget class="QLabel" name="map">
     <property name="geometry">
      <rect>
       <x>10</x>

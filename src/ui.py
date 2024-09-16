@@ -1,7 +1,9 @@
 import sys
 import csv
 import rospkg
-from PyQt5 import QtWidgets, uic
+import cv2
+import numpy as np
+from PyQt5 import QtWidgets, uic, QtGui
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
@@ -25,10 +27,35 @@ class Ui(QtWidgets.QMainWindow):
 
         self.coordinates = []
 
+        # Initialize images
+        self.border = 50
+        self.image = 255 * np.ones((650 + self.border * 2, 700 + self.border * 2, 3), np.uint8)
+
+        self.corn_img = cv2.imread(directory+"/images/cornstalks.jpg")
+        self.corn_img = cv2.cvtColor(self.corn_img, cv2.COLOR_RGB2BGR)
+        self.corn_img = cv2.resize(self.corn_img, (0, 0), fx = 0.083, fy = 0.083)
+        self.amiga_img = cv2.imread(directory+"/images/amiga.jpg")
+        self.amiga_img = cv2.cvtColor(self.amiga_img, cv2.COLOR_RGB2BGR)
+        self.amiga_img = cv2.resize(self.amiga_img, (0, 0), fx = 0.0605, fy = 0.0605)
+        self.amiga_img = self.amiga_img[:100, :100, :]
+
+        self.updateMapImage()
+
+    def updateMapImage(self):
+        rows, cols, _ = self.image.shape
+        croppedImage = self.image[self.border:rows - self.border, self.border:cols - self.border].copy()
+        self.mapImage = QtGui.QImage(croppedImage, croppedImage.shape[1], croppedImage.shape[0], 3 * croppedImage.shape[1], QtGui.QImage.Format_RGB888)
+        pixmap_current = QtGui.QPixmap.fromImage(self.mapImage)
+        pixmap_image_current = QtGui.QPixmap(pixmap_current)
+        self.map.setPixmap(pixmap_image_current)
+
     def exitEvent(self):
         exit()
 
     def deleteTableRowAction(self, row):
+        self.image[int(self.table.item(row, 2).text()):int(self.table.item(row, 2).text())+100, int(self.table.item(row, 1).text()):int(self.table.item(row, 1).text())+100] = [255, 255, 255]
+        self.updateMapImage()
+
         self.table.removeRow(row)
         for idx in range(self.table.rowCount()):
             self.table.setItem(idx, 0, QtWidgets.QTableWidgetItem(str(idx+1)))
@@ -40,7 +67,9 @@ class Ui(QtWidgets.QMainWindow):
         long = self.longitudeEdit.text()
 
         try:
-            float(lat), float(long)
+            lat = int(lat)
+            long = int(long)
+            if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): raise Exception
             self.statusImage.setText("Valid coordinate input.")
         except:
             self.statusImage.setText("Invalid coordinate input.")
@@ -51,8 +80,8 @@ class Ui(QtWidgets.QMainWindow):
         row = self.table.rowCount()
         self.table.insertRow(row)
         self.table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(row+1)))
-        self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(lat))
-        self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(long))
+        self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(lat)))
+        self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(long)))
         self.table.setItem(row, 3, QtWidgets.QTableWidgetItem(str("")))
 
         btn = QtWidgets.QPushButton(self.table)
@@ -60,6 +89,9 @@ class Ui(QtWidgets.QMainWindow):
         btn.setStyleSheet("background-color:red")
         self.table.setCellWidget(row, 4, btn)
         self.table.cellWidget(row, 4).clicked.connect(lambda: self.deleteTableRowAction(row))
+
+        self.image[long:long+100,lat:lat+100,:] = self.corn_img
+        self.updateMapImage()
 
         self.lattidudeEdit.clear()
         self.longitudeEdit.clear()
@@ -95,7 +127,9 @@ class Ui(QtWidgets.QMainWindow):
                         continue
 
                     try:
-                        float(row[0]), float(row[1])
+                        lat = int(row[0])
+                        long = int(row[1])
+                        if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): raise Exception
                     except:
                         validInputs = False
                         continue
@@ -112,6 +146,9 @@ class Ui(QtWidgets.QMainWindow):
                     btn.setStyleSheet("background-color:red")
                     self.table.setCellWidget(rowNum, 4, btn)
                     self.table.cellWidget(rowNum, 4).clicked.connect(lambda: self.deleteTableRowAction(rowNum))
+
+                    self.image[long:long+100,lat:lat+100,:] = self.corn_img
+                    self.updateMapImage()
             
             if not validInputs:
                 self.statusImage.setText("Some invalid values were skipped.")
