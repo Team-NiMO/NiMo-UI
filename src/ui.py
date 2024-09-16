@@ -105,7 +105,7 @@ class Ui(QtWidgets.QMainWindow):
                     btn.setText("X")
                     btn.setStyleSheet("background-color:red")
                     self.table.setCellWidget(rowNum, 4, btn)
-                    self.table.cellWidget(row, 4).clicked.connect(lambda: self.deleteTableRowAction(rowNum))
+                    self.table.cellWidget(rowNum, 4).clicked.connect(lambda: self.deleteTableRowAction(rowNum))
             
             if not validInputs:
                 self.statusImage.setText("Some invalid values were skipped.")
