@@ -1,6 +1,6 @@
 import sys
 import csv
-# import rospkg
+import rospkg
 from PyQt5 import QtWidgets, uic
 
 class Ui(QtWidgets.QMainWindow):
@@ -131,10 +131,10 @@ class Ui(QtWidgets.QMainWindow):
         self.statusImage.setText("Data save to .csv complete.")
 
 if __name__ == "__main__":
-    # rospack = rospkg.RosPack()
-    # package_path = rospack.get_path('nimo_ui')
+    rospack = rospkg.RosPack()
+    package_path = rospack.get_path('nimo_ui')
 
     app = QtWidgets.QApplication(sys.argv)
-    # window = Ui(package_path)
-    window = Ui("/home/sruthim/NiMo/NiMo-UI")
+    window = Ui(package_path)
+    #window = Ui("/home/sruthim/NiMo/NiMo-UI")
     app.exec_()
