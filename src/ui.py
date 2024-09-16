@@ -1,6 +1,6 @@
 import sys
 import csv
-import rospkg
+# import rospkg
 from PyQt5 import QtWidgets, uic
 
 class Ui(QtWidgets.QMainWindow):
@@ -30,7 +30,6 @@ class Ui(QtWidgets.QMainWindow):
 
     def deleteTableRowAction(self, row):
         self.table.removeRow(row)
-        self.coordinates.pop(row)
         for idx in range(self.table.rowCount()):
             self.table.setItem(idx, 0, QtWidgets.QTableWidgetItem(str(idx+1)))
         self.statusImage.setText("Removed coordinate.")
@@ -40,7 +39,7 @@ class Ui(QtWidgets.QMainWindow):
         long = self.longitudeEdit.text()
 
         try:
-            self.coordinates.append([float(lat), float(long)])
+            float(lat), float(long)
             self.statusImage.setText("Valid coordinate input.")
         except:
             self.statusImage.setText("Invalid coordinate input.")
@@ -76,6 +75,12 @@ class Ui(QtWidgets.QMainWindow):
         self.statusImage.setText("Robot in motion.")
         self.startButton.setDisabled(True)
 
+        columns = range(1, self.table.columnCount()-2)
+        for row in range(self.table.rowCount()):
+            self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
+
+        print(self.coordinates)
+
     def uploadCSVButtonAction(self):
         fileName, ok = QtWidgets.QFileDialog.getOpenFileName(self, 'Select a CSV file:', 'C:\\', "CSV (*.csv)")
         if ok:
@@ -89,7 +94,7 @@ class Ui(QtWidgets.QMainWindow):
                         continue
 
                     try:
-                        self.coordinates.append([float(row[0]), float(row[1])])
+                        float(row[0]), float(row[1])
                     except:
                         validInputs = False
                         continue
@@ -126,9 +131,10 @@ class Ui(QtWidgets.QMainWindow):
         self.statusImage.setText("Data save to .csv complete.")
 
 if __name__ == "__main__":
-    rospack = rospkg.RosPack()
-    package_path = rospack.get_path('nimo_ui')
+    # rospack = rospkg.RosPack()
+    # package_path = rospack.get_path('nimo_ui')
 
     app = QtWidgets.QApplication(sys.argv)
-    window = Ui(package_path)
+    # window = Ui(package_path)
+    window = Ui("/home/sruthim/NiMo/NiMo-UI")
     app.exec_()
