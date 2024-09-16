@@ -32,6 +32,7 @@ class Ui(QtWidgets.QMainWindow):
         self.table.removeRow(row)
         for idx in range(self.table.rowCount()):
             self.table.setItem(idx, 0, QtWidgets.QTableWidgetItem(str(idx+1)))
+            self.table.cellWidget(idx, 4).clicked.connect(lambda: self.deleteTableRowAction(idx))
         self.statusImage.setText("Removed coordinate.")
     
     def addButtonAction(self):
