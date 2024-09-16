@@ -128,7 +128,7 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>370</y>
+      <y>400</y>
       <width>101</width>
       <height>51</height>
      </rect>
@@ -146,7 +146,7 @@
     <property name="geometry">
      <rect>
       <x>1160</x>
-      <y>370</y>
+      <y>400</y>
       <width>101</width>
       <height>51</height>
      </rect>
@@ -262,7 +262,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>370</y>
+      <y>400</y>
       <width>141</width>
       <height>51</height>
      </rect>
@@ -277,7 +277,7 @@
     <property name="geometry">
      <rect>
       <x>890</x>
-      <y>370</y>
+      <y>400</y>
       <width>151</width>
       <height>51</height>
      </rect>
@@ -292,7 +292,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>425</y>
+      <y>460</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -310,9 +310,9 @@
     <property name="geometry">
      <rect>
       <x>780</x>
-      <y>465</y>
+      <y>495</y>
       <width>441</width>
-      <height>121</height>
+      <height>91</height>
      </rect>
     </property>
     <property name="font">
@@ -356,6 +356,42 @@
     </property>
     <property name="text">
      <string>Exit UI</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="latitudeLabel">
+    <property name="geometry">
+     <rect>
+      <x>740</x>
+      <y>370</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Latitude</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="longitudeLabel">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>370</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Longitude</string>
     </property>
    </widget>
   </widget>
