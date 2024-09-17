@@ -1,9 +1,17 @@
 import sys
 import csv
-import rospkg
 import cv2
+import yaml
 import numpy as np
+
+import rospy
+import rospkg
+
 from PyQt5 import QtWidgets, uic, QtGui
+
+# TODO: Amiga location datatype w/ Sauda + Shara
+# TODO: Sampling coords datatype
+# TODO: Nitrate datatype
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
@@ -11,6 +19,15 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi(directory + "/gui.ui", self)
 
         self.showFullScreen()
+
+        # Load config
+        self.loadConfig()
+        self.current_waypoint = 0
+
+        # Setup ROS nodes
+        # rospy.Subscriber("???", ???, self.baseUpdateCallback)
+        # rospy.Subscriber("???", ???, self.nitrateCallback)
+        # self.pos_pub = rospy.Publisher("???", ???, queue_size=10)
 
         # Connect Buttons to Functions
         self.exitButton.clicked.connect(self.exitEvent)
@@ -41,6 +58,43 @@ class Ui(QtWidgets.QMainWindow):
 
         self.updateMapImage()
 
+    def loadConfig(self):
+        '''
+        Load configuration from yaml file
+        '''
+
+        rospack = rospkg.RosPack()
+        self.package_path = rospack.get_path('nimo_ui')
+        config_path = self.package_path + '/config/default.yaml'
+        with open(config_path) as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+
+        self.min_lat = config["map"]["min_lat"]
+        self.max_lat = config["map"]["max_lat"]
+        self.min_long = config["map"]["min_long"]
+        self.max_long = config["map"]["max_long"]
+
+    def baseUpdateCallback(self, data):
+        lat, long = ... # Depends on data type
+
+        lat, long = self.coords2Pixels(float(lat), float(long))
+        if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): return
+        
+        self.image[long:long+100,lat:lat+100,:] = self.amiga_img
+        self.updateMapImage()
+
+    def nitrateCallback(self, data):
+        nitVal = ... # Depends on data type
+
+        self.table.setItem(self.current_waypoint, 3, QtWidgets.QTableWidgetItem(str(nitVal)))
+        self.current_waypoint += 1
+
+    def coords2Pixels(self, lat, long):
+        lat_px = 700 * (lat - self.min_lat) / (self.max_lat - self.min_lat)
+        long_px = 650 * (long - self.min_long) / (self.max_long - self.min_long)
+
+        return int(lat_px), int(long_px)
+
     def updateMapImage(self):
         rows, cols, _ = self.image.shape
         croppedImage = self.image[self.border:rows - self.border, self.border:cols - self.border].copy()
@@ -53,6 +107,12 @@ class Ui(QtWidgets.QMainWindow):
         exit()
 
     def deleteTableRowAction(self, row):
+        # Bandaid for double delete thing
+        try:
+            self.table.item(row, 2).text()
+        except:
+            return
+        
         self.image[int(self.table.item(row, 2).text()):int(self.table.item(row, 2).text())+100, int(self.table.item(row, 1).text()):int(self.table.item(row, 1).text())+100] = [255, 255, 255]
         self.updateMapImage()
 
@@ -67,8 +127,7 @@ class Ui(QtWidgets.QMainWindow):
         long = self.longitudeEdit.text()
 
         try:
-            lat = int(lat)
-            long = int(long)
+            lat, long = self.coords2Pixels(float(lat), float(long))
             if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): raise Exception
             self.statusImage.setText("Valid coordinate input.")
         except:
@@ -112,7 +171,9 @@ class Ui(QtWidgets.QMainWindow):
         for row in range(self.table.rowCount()):
             self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
 
-        print(self.coordinates)
+        # # Publish coordinates via ROS
+        # self.coordinates
+        # self.pos_pub(...)
 
     def uploadCSVButtonAction(self):
         fileName, ok = QtWidgets.QFileDialog.getOpenFileName(self, 'Select a CSV file:', 'C:\\', "CSV (*.csv)")
@@ -127,8 +188,7 @@ class Ui(QtWidgets.QMainWindow):
                         continue
 
                     try:
-                        lat = int(row[0])
-                        long = int(row[1])
+                        lat, long = self.coords2Pixels(float(row[0]), float(row[1]))
                         if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): raise Exception
                     except:
                         validInputs = False
@@ -174,5 +234,4 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     window = Ui(package_path)
-    #window = Ui("/home/sruthim/NiMo/NiMo-UI")
     app.exec_()
