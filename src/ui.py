@@ -6,12 +6,12 @@ import numpy as np
 
 import rospy
 import rospkg
+from std_msgs.msg import Float32
 
 from PyQt5 import QtWidgets, uic, QtGui
 
 # TODO: Amiga location datatype w/ Sauda + Shara
 # TODO: Sampling coords datatype
-# TODO: Nitrate datatype
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
@@ -24,9 +24,10 @@ class Ui(QtWidgets.QMainWindow):
         self.loadConfig()
         self.current_waypoint = 0
 
-        # Setup ROS nodes
+        # Setup ROS publishers and subscribers
+        rospy.init_node("nimo_ui")
+        rospy.Subscriber("sampleVal", Float32, self.nitrateCallback)
         # rospy.Subscriber("???", ???, self.baseUpdateCallback)
-        # rospy.Subscriber("???", ???, self.nitrateCallback)
         # self.pos_pub = rospy.Publisher("???", ???, queue_size=10)
 
         # Connect Buttons to Functions
@@ -84,7 +85,12 @@ class Ui(QtWidgets.QMainWindow):
         self.updateMapImage()
 
     def nitrateCallback(self, data):
-        nitVal = ... # Depends on data type
+        if self.addButton.isEnabled():
+            return
+        elif self.current_waypoint > self.table.rowCount():
+            return
+
+        nitVal = data.data
 
         self.table.setItem(self.current_waypoint, 3, QtWidgets.QTableWidgetItem(str(nitVal)))
         self.current_waypoint += 1
@@ -235,3 +241,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = Ui(package_path)
     app.exec_()
+
+
+    rospy.spin()
