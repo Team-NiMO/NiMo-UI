@@ -119,7 +119,8 @@ class Ui(QtWidgets.QMainWindow):
         except:
             return
         
-        self.image[int(self.table.item(row, 2).text()):int(self.table.item(row, 2).text())+100, int(self.table.item(row, 1).text()):int(self.table.item(row, 1).text())+100] = [255, 255, 255]
+        lat, long = self.coords2Pixels(float(self.table.item(row, 1).text()), float(self.table.item(row, 2).text()))
+        self.image[long:long+100, lat:lat+100] = [255, 255, 255]
         self.updateMapImage()
 
         self.table.removeRow(row)
@@ -133,6 +134,7 @@ class Ui(QtWidgets.QMainWindow):
         long = self.longitudeEdit.text()
 
         try:
+            orig_lat, orig_long = float(lat), float(long)
             lat, long = self.coords2Pixels(float(lat), float(long))
             if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): raise Exception
             self.statusImage.setText("Valid coordinate input.")
@@ -145,8 +147,8 @@ class Ui(QtWidgets.QMainWindow):
         row = self.table.rowCount()
         self.table.insertRow(row)
         self.table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(row+1)))
-        self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(lat)))
-        self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(long)))
+        self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(orig_lat)))
+        self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(orig_long)))
         self.table.setItem(row, 3, QtWidgets.QTableWidgetItem(str("")))
 
         btn = QtWidgets.QPushButton(self.table)
