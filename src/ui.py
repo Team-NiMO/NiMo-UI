@@ -7,6 +7,7 @@ import numpy as np
 import rospy
 import rospkg
 from std_msgs.msg import Float32
+from nav_msgs.msg import Odometry
 
 from PyQt5 import QtWidgets, uic, QtGui
 
@@ -27,7 +28,7 @@ class Ui(QtWidgets.QMainWindow):
         # Setup ROS publishers and subscribers
         rospy.init_node("nimo_ui")
         rospy.Subscriber("sampleVal", Float32, self.nitrateCallback)
-        # rospy.Subscriber("???", ???, self.baseUpdateCallback)
+        rospy.Subscriber("/odometry/filtered/", Odometry, self.baseUpdateCallback)
         # self.pos_pub = rospy.Publisher("???", ???, queue_size=10)
 
         # Connect Buttons to Functions
@@ -76,7 +77,7 @@ class Ui(QtWidgets.QMainWindow):
         self.max_long = config["map"]["max_long"]
 
     def baseUpdateCallback(self, data):
-        lat, long = ... # Depends on data type
+        lat, long = data.pose.pose.position.x, data.pose.pose.position.y
 
         lat, long = self.coords2Pixels(float(lat), float(long))
         if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): return
