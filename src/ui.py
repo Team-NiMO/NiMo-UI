@@ -11,15 +11,14 @@ from nav_msgs.msg import Odometry
 
 from PyQt5 import QtWidgets, uic, QtGui
 
-# TODO: Amiga location datatype w/ Sauda + Shara
-# TODO: Sampling coords datatype
+# TODO: Sampling coords datatype => MPC_Amiga/gps_coordinates
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
         super(Ui, self).__init__()
         uic.loadUi(directory + "/gui.ui", self)
 
-        self.showFullScreen()
+        self.show()
 
         # Load config
         self.loadConfig()
@@ -77,7 +76,7 @@ class Ui(QtWidgets.QMainWindow):
         self.max_long = config["map"]["max_long"]
 
     def baseUpdateCallback(self, data):
-        lat, long = data.pose.pose.position.x, data.pose.pose.position.y
+        lat, long = data.pose.pose.position.y, data.pose.pose.position.x
 
         lat, long = self.coords2Pixels(float(lat), float(long))
         if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): return

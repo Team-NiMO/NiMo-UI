@@ -1,5 +1,5 @@
 map:
-  min_lat: 50
-  max_lat: 1450
-  min_long: 50
-  max_long: 1350
+  min_lat: -30
+  max_lat: 30
+  min_long: 60
+  max_long: 0
