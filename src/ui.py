@@ -11,8 +11,6 @@ from nav_msgs.msg import Odometry
 
 from PyQt5 import QtWidgets, uic, QtGui
 
-# TODO: Sampling coords datatype => MPC_Amiga/gps_coordinates
-
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
         super(Ui, self).__init__()
@@ -24,10 +22,11 @@ class Ui(QtWidgets.QMainWindow):
         self.loadConfig()
         self.current_waypoint = 0
 
-        # Setup ROS publishers and subscribers
+        # Setup ROS publishers, subscribers, and parameters
         rospy.init_node("nimo_ui")
         rospy.Subscriber("sampleVal", Float32, self.nitrateCallback)
         rospy.Subscriber("/odometry/filtered/", Odometry, self.baseUpdateCallback)
+        rospy.set_param('/ui_stat', False)
 
         # Connect Buttons to Functions
         self.exitButton.clicked.connect(self.exitEvent)
@@ -186,6 +185,9 @@ class Ui(QtWidgets.QMainWindow):
         for row in range(self.table.rowCount()):
             # self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
             f.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
+
+        # Update navigation parameter status
+        rospy.set_param('/ui_stat', True)
 
     def uploadCSVButtonAction(self):
         fileName, ok = QtWidgets.QFileDialog.getOpenFileName(self, 'Select a CSV file:', 'C:\\', "CSV (*.csv)")
