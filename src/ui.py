@@ -28,7 +28,6 @@ class Ui(QtWidgets.QMainWindow):
         rospy.init_node("nimo_ui")
         rospy.Subscriber("sampleVal", Float32, self.nitrateCallback)
         rospy.Subscriber("/odometry/filtered/", Odometry, self.baseUpdateCallback)
-        # self.pos_pub = rospy.Publisher("???", ???, queue_size=10)
 
         # Connect Buttons to Functions
         self.exitButton.clicked.connect(self.exitEvent)
@@ -74,6 +73,9 @@ class Ui(QtWidgets.QMainWindow):
         self.max_lat = config["map"]["max_lat"]
         self.min_long = config["map"]["min_long"]
         self.max_long = config["map"]["max_long"]
+
+        self.package_name = config["file"]["package_name"]
+        self.file_name = config["file"]["file_name"]
 
     def baseUpdateCallback(self, data):
         lat, long = data.pose.pose.position.y, data.pose.pose.position.x
@@ -175,13 +177,15 @@ class Ui(QtWidgets.QMainWindow):
         self.statusImage.setText("Robot in motion.")
         self.startButton.setDisabled(True)
 
+        # Write coordinates to file
+        rospack = rospkg.RosPack()
+        package_path = rospack.get_path(self.package_name)
+        f = open(package_path + "/" + self.file_name, "w")
+
         columns = range(1, self.table.columnCount()-2)
         for row in range(self.table.rowCount()):
-            self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
-
-        # # Publish coordinates via ROS
-        # self.coordinates
-        # self.pos_pub(...)
+            # self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
+            f.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
 
     def uploadCSVButtonAction(self):
         fileName, ok = QtWidgets.QFileDialog.getOpenFileName(self, 'Select a CSV file:', 'C:\\', "CSV (*.csv)")

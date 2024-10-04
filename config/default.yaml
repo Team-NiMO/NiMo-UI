@@ -3,3 +3,7 @@ map:
   max_lat: 30
   min_long: 60
   max_long: 0
+
+file:
+  package_name: nimo_ui
+  file_name: waypoints.txt
