@@ -5,5 +5,5 @@ map:
   max_long: 0
 
 file:
-  package_name: nimo_ui
-  file_name: waypoints.txt
+  package_name: mpc_amiga
+  file_name: gps_coordinates/barn_field_waypoints.txt

@@ -14,6 +14,7 @@ from PyQt5 import QtWidgets, uic, QtGui
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
         super(Ui, self).__init__()
+        self.ready = False
         uic.loadUi(directory + "/gui.ui", self)
 
         self.show()
@@ -76,8 +77,16 @@ class Ui(QtWidgets.QMainWindow):
         self.package_name = config["file"]["package_name"]
         self.file_name = config["file"]["file_name"]
 
+        self.ready = True
+
     def baseUpdateCallback(self, data):
-        lat, long = data.pose.pose.position.y, data.pose.pose.position.x
+        try:
+            if not self.ready:
+                return
+        except:
+            return
+        
+        lat, long = data.pose.pose.position.x, data.pose.pose.position.y
 
         lat, long = self.coords2Pixels(float(lat), float(long))
         if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): return
@@ -96,7 +105,7 @@ class Ui(QtWidgets.QMainWindow):
         self.table.setItem(self.current_waypoint, 3, QtWidgets.QTableWidgetItem(str(nitVal)))
         self.current_waypoint += 1
 
-    def coords2Pixels(self, lat, long):
+    def coords2Pixels(self, long, lat):
         lat_px = 700 * (lat - self.min_lat) / (self.max_lat - self.min_lat)
         long_px = 650 * (long - self.min_long) / (self.max_long - self.min_long)
 
@@ -158,7 +167,7 @@ class Ui(QtWidgets.QMainWindow):
         self.table.setCellWidget(row, 4, btn)
         self.table.cellWidget(row, 4).clicked.connect(lambda: self.deleteTableRowAction(row))
 
-        self.image[long:long+100,lat:lat+100,:] = self.corn_img
+        self.image[long:long+100,lat-100:lat,:] = self.corn_img
         self.updateMapImage()
 
         self.lattidudeEdit.clear()
@@ -221,7 +230,7 @@ class Ui(QtWidgets.QMainWindow):
                     self.table.setCellWidget(rowNum, 4, btn)
                     self.table.cellWidget(rowNum, 4).clicked.connect(lambda: self.deleteTableRowAction(rowNum))
 
-                    self.image[long:long+100,lat:lat+100,:] = self.corn_img
+                    self.image[long:long+100,lat-100:lat,:] = self.corn_img
                     self.updateMapImage()
             
             if not validInputs:
