@@ -174,6 +174,18 @@ class Ui(QtWidgets.QMainWindow):
         self.longitudeEdit.clear()
 
     def startButtonAction(self):
+        if self.table.rowCount() == 0:
+            self.statusImage.setText("No waypoints specified")
+            return
+
+        rospack = rospkg.RosPack()
+        try:
+            package_path = rospack.get_path(self.package_name)
+        except:
+            self.statusImage.setText("Navigation package not found")
+            return
+        f = open(package_path + "/" + self.file_name, "w")
+
         self.addButton.setDisabled(True)
         self.uploadCSVButton.setDisabled(True)
         self.saveCSVButton.setDisabled(False)
@@ -186,10 +198,6 @@ class Ui(QtWidgets.QMainWindow):
         self.startButton.setDisabled(True)
 
         # Write coordinates to file
-        rospack = rospkg.RosPack()
-        package_path = rospack.get_path(self.package_name)
-        f = open(package_path + "/" + self.file_name, "w")
-
         columns = range(1, self.table.columnCount()-2)
         for row in range(self.table.rowCount()):
             # self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
