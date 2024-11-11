@@ -248,12 +248,13 @@ class Ui(QtWidgets.QMainWindow):
         # Write coordinates to barn_field
         barn_field.write(str(self.lat) + "," + str(self.long) + ",0.0,0.0,0.0,0.0\n")
         for row in range(self.table.rowCount()):
-            barn_field.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
+            barn_field.write(str(float(self.table.item(row, 1).text())) + "," + str(float(self.table.item(row, 2).text())) + ",0.0,0.0,0.0,0.0\n")
         barn_field.write(str(self.final_lat) + "," + str(self.final_long) + ",0.0,0.0,0.0,0.0\n")
 
         # Write coordinates to stopping
         for row in range(self.table.rowCount()):
-            stopping.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
+            stopping.write(str(float(self.table.item(row, 1).text())) + "," + str(float(self.table.item(row, 2).text())) + ",0.0,0.0,0.0,0.0\n")
+        stopping.write(str(self.final_lat) + "," + str(self.final_long) + ",0.0,0.0,0.0,0.0\n")
 
         # Write coordinates to pruning
         for i in range(2):
