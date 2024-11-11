@@ -11,6 +11,46 @@ from nav_msgs.msg import Odometry
 
 from PyQt5 import QtWidgets, uic, QtGui
 
+class popup(QtWidgets.QWidget):
+    def __init__(self, main_window, parent=None):
+        super(popup, self).__init__(parent)
+
+        self.main_window = main_window
+
+        layout = QtWidgets.QFormLayout()
+        self.label1 = QtWidgets.QLabel("Lattitude")
+        self.le1 = QtWidgets.QLineEdit()
+        layout.addRow(self.label1,self.le1)
+
+        self.label2 = QtWidgets.QLabel("Longitutde")
+        self.le2 = QtWidgets.QLineEdit()
+        layout.addRow(self.label2,self.le2)
+
+        self.button = QtWidgets.QPushButton("Enter")
+        self.button.clicked.connect(self.enterButtonAction)
+        layout.addRow(self.button)
+
+        self.setLayout(layout)
+        self.setWindowTitle("Enter End of Row Waypoint")
+
+    def enterButtonAction(self):
+        lat = self.le1.text()
+        long = self.le2.text()
+
+        try:
+            orig_lat, orig_long = float(lat), float(long)
+            lat, long = self.main_window.coords2Pixels(float(lat), float(long))
+            if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): raise Exception
+        except:
+            self.setWindowTitle("Invalid Final Waypoint")
+            self.le1.clear()
+            self.le2.clear()
+            return
+        
+        self.main_window.final_lat = orig_lat
+        self.main_window.final_long = orig_long
+        self.close()
+
 class Ui(QtWidgets.QMainWindow):
     def __init__(self, directory):
         super(Ui, self).__init__()
@@ -22,6 +62,10 @@ class Ui(QtWidgets.QMainWindow):
         # Load config
         self.loadConfig()
         self.current_waypoint = 0
+        self.lat = None
+        self.long = None
+        self.final_lat = None
+        self.final_long = None
 
         # Setup ROS publishers, subscribers, and parameters
         rospy.init_node("nimo_ui")
@@ -75,7 +119,9 @@ class Ui(QtWidgets.QMainWindow):
         self.max_long = config["map"]["max_long"]
 
         self.package_name = config["file"]["package_name"]
-        self.file_name = config["file"]["file_name"]
+        self.barn_field = config["file"]["barn_field"]
+        self.stopping = config["file"]["stopping"]
+        self.pruning = config["file"]["pruning"]
 
         self.ready = True
 
@@ -86,9 +132,9 @@ class Ui(QtWidgets.QMainWindow):
         except:
             return
         
-        lat, long = data.pose.pose.position.x, data.pose.pose.position.y
+        self.lat, self.long = data.pose.pose.position.x, data.pose.pose.position.y
 
-        lat, long = self.coords2Pixels(float(lat), float(long))
+        lat, long = self.coords2Pixels(float(self.lat), float(self.long))
         if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): return
         
         self.image[long:long+100,lat:lat+100,:] = self.amiga_img
@@ -177,6 +223,16 @@ class Ui(QtWidgets.QMainWindow):
         if self.table.rowCount() == 0:
             self.statusImage.setText("No waypoints specified")
             return
+        
+        if self.lat is None or self.long is None:
+            self.statusImage.setText("Base location unknown")
+            return
+        
+        if self.final_lat is None or self.final_long is None:
+            self.ex = popup(self)
+            self.ex.show()
+            self.statusImage.setText("Enter end of row waypoint")
+            return
 
         rospack = rospkg.RosPack()
         try:
@@ -184,24 +240,36 @@ class Ui(QtWidgets.QMainWindow):
         except:
             self.statusImage.setText("Navigation package not found")
             return
-        f = open(package_path + "/" + self.file_name, "w")
+        
+        barn_field = open(package_path + "/" + self.barn_field, "w")
+        stopping = open(package_path + "/" + self.stopping, "w")
+        pruning = open(package_path + "/" + self.pruning, "w")
 
+        # Write coordinates to barn_field
+        barn_field.write(str(self.lat) + "," + str(self.long) + ",0.0,0.0,0.0,0.0\n")
+        for row in range(self.table.rowCount()):
+            barn_field.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
+        barn_field.write(str(self.final_lat) + "," + str(self.final_long) + ",0.0,0.0,0.0,0.0\n")
+
+        # Write coordinates to stopping
+        for row in range(self.table.rowCount()):
+            stopping.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
+
+        # Write coordinates to pruning
+        for i in range(2):
+            pruning.write(str(self.final_lat) + "," + str(self.final_long) + ",0.0,0.0,0.0,0.0\n")
+
+        # Set UI
         self.addButton.setDisabled(True)
         self.uploadCSVButton.setDisabled(True)
         self.saveCSVButton.setDisabled(False)
-        
+
         row = self.table.rowCount()
         for idx in range(row):
             self.table.cellWidget(idx,4).setDisabled(True)
 
         self.statusImage.setText("Robot in motion.")
         self.startButton.setDisabled(True)
-
-        # Write coordinates to file
-        columns = range(1, self.table.columnCount()-2)
-        for row in range(self.table.rowCount()):
-            # self.coordinates.append([float(self.table.item(row, column).text()) for column in columns])
-            f.write(self.table.item(row, 1).text() + "," + self.table.item(row, 2).text() + ",0.0,0.0,0.0,0.0\n")
 
         # Update navigation parameter status
         rospy.set_param('/ui_stat', True)
@@ -210,6 +278,15 @@ class Ui(QtWidgets.QMainWindow):
         fileName, ok = QtWidgets.QFileDialog.getOpenFileName(self, 'Select a CSV file:', 'C:\\', "CSV (*.csv)")
         if ok:
             validInputs = True
+
+            row_count = 0
+            with open(fileName, newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                next(reader, None) # Assume that there is a header for "Latitude, Longitude"
+                for row in reader:
+                    row_count += 1
+
+            count = 0
             with open(fileName, newline='') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
                 next(reader, None) # Assume that there is a header for "Latitude, Longitude"
@@ -224,6 +301,12 @@ class Ui(QtWidgets.QMainWindow):
                     except:
                         validInputs = False
                         continue
+
+                    # Set final waypoint in file as end point
+                    if count == row_count - 1:
+                        self.final_lat = float(row[0])
+                        self.final_long = float(row[1])
+                        break
                     
                     rowNum = self.table.rowCount()
                     self.table.insertRow(rowNum)
@@ -240,6 +323,8 @@ class Ui(QtWidgets.QMainWindow):
 
                     self.image[long:long+100,lat-100:lat,:] = self.corn_img
                     self.updateMapImage()
+
+                    count += 1
             
             if not validInputs:
                 self.statusImage.setText("Some invalid values were skipped.")
