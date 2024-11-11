@@ -6,4 +6,6 @@ map:
 
 file:
   package_name: mpc_amiga
-  file_name: gps_coordinates/barn_field_waypoints.txt
+  barn_field: gps_coordinates/barn_field_waypoints.txt
+  stopping: gps_coordinates/stopping_points.txt
+  pruning: gps_coordinates/pruning_points_real.txt
