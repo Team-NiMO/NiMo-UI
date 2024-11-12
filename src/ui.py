@@ -102,6 +102,8 @@ class Ui(QtWidgets.QMainWindow):
 
         self.updateMapImage()
 
+        self.showFullScreen()
+
     def loadConfig(self):
         '''
         Load configuration from yaml file
@@ -125,19 +127,16 @@ class Ui(QtWidgets.QMainWindow):
 
         self.ready = True
 
-    def baseUpdateCallback(self, data):
-        try:
-            if not self.ready:
-                return
-        except:
-            return
-        
+    def baseUpdateCallback(self, data):        
         self.lat, self.long = data.pose.pose.position.x, data.pose.pose.position.y
 
         lat, long = self.coords2Pixels(float(self.lat), float(self.long))
         if (lat > 700) or (lat < 0) or (long > 650) or (long < 0): return
         
-        self.image[long:long+100,lat:lat+100,:] = self.amiga_img
+        try:
+            self.image[long:long+100,lat:lat+100,:] = self.amiga_img
+        except:
+            return
         self.updateMapImage()
 
     def nitrateCallback(self, data):
@@ -176,7 +175,7 @@ class Ui(QtWidgets.QMainWindow):
             return
         
         lat, long = self.coords2Pixels(float(self.table.item(row, 1).text()), float(self.table.item(row, 2).text()))
-        self.image[long:long+100, lat:lat+100] = [255, 255, 255]
+        self.image[long:long+100, lat-100:lat,:] = [255, 255, 255]
         self.updateMapImage()
 
         self.table.removeRow(row)
@@ -234,9 +233,10 @@ class Ui(QtWidgets.QMainWindow):
             self.statusImage.setText("Enter end of row waypoint")
             return
 
-        rospack = rospkg.RosPack()
+        # rospack = rospkg.RosPack()
         try:
-            package_path = rospack.get_path(self.package_name)
+            # package_path = rospack.get_path(self.package_name)
+            package_path = "/home/amiga/catkin_workspaces/nimo_ws/src/MPC_Amiga"
         except:
             self.statusImage.setText("Navigation package not found")
             return
@@ -312,15 +312,15 @@ class Ui(QtWidgets.QMainWindow):
                     rowNum = self.table.rowCount()
                     self.table.insertRow(rowNum)
                     self.table.setItem(rowNum, 0, QtWidgets.QTableWidgetItem(str(rowNum+1)))
-                    self.table.setItem(rowNum, 1, QtWidgets.QTableWidgetItem(str(row[0])))
-                    self.table.setItem(rowNum, 2, QtWidgets.QTableWidgetItem(str(row[1])))
+                    self.table.setItem(rowNum, 1, QtWidgets.QTableWidgetItem(str(np.round(float(row[0]), 4))))
+                    self.table.setItem(rowNum, 2, QtWidgets.QTableWidgetItem(str(np.round(float(row[1]), 4))))
                     self.table.setItem(rowNum, 3, QtWidgets.QTableWidgetItem(str("")))
 
                     btn = QtWidgets.QPushButton(self.table)
                     btn.setText("X")
                     btn.setStyleSheet("background-color:red")
                     self.table.setCellWidget(rowNum, 4, btn)
-                    self.table.cellWidget(rowNum, 4).clicked.connect(lambda: self.deleteTableRowAction(rowNum))
+                    self.table.cellWidget(rowNum, 4).clicked.connect(lambda state, n=rowNum: self.deleteTableRowAction(n))
 
                     self.image[long:long+100,lat-100:lat,:] = self.corn_img
                     self.updateMapImage()
