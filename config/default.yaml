@@ -1,7 +1,7 @@
 map:
-  min_lat: -30
-  max_lat: 30
-  min_long: 60
+  min_lat: -40
+  max_lat: -20
+  min_long: -20
   max_long: 0
 
 file:

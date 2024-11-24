@@ -168,12 +168,6 @@ class Ui(QtWidgets.QMainWindow):
         exit()
 
     def deleteTableRowAction(self, row):
-        # Bandaid for double delete thing
-        try:
-            self.table.item(row, 2).text()
-        except:
-            return
-        
         lat, long = self.coords2Pixels(float(self.table.item(row, 1).text()), float(self.table.item(row, 2).text()))
         self.image[long:long+100, lat-100:lat,:] = [255, 255, 255]
         self.updateMapImage()
@@ -181,7 +175,8 @@ class Ui(QtWidgets.QMainWindow):
         self.table.removeRow(row)
         for idx in range(self.table.rowCount()):
             self.table.setItem(idx, 0, QtWidgets.QTableWidgetItem(str(idx+1)))
-            self.table.cellWidget(idx, 4).clicked.connect(lambda: self.deleteTableRowAction(idx))
+            self.table.cellWidget(idx, 4).clicked.disconnect()
+            self.table.cellWidget(idx, 4).clicked.connect(lambda state, n=idx: self.deleteTableRowAction(n))
         self.statusImage.setText("Removed coordinate.")
     
     def addButtonAction(self):
